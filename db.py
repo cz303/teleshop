@@ -1,3 +1,5 @@
+import json
+
 from peewee import *
 
 base = SqliteDatabase("base.db")
@@ -12,33 +14,30 @@ class BaseModel(Model):
 
 class Product(BaseModel):
     id = PrimaryKeyField(primary_key=True)
-    title = CharField()
-    description = TextField()
+    title = CharField(null=True)
+    description = TextField(null=True)
     img = TextField()
-    price = IntegerField()
+    price = IntegerField(null=True)
     category = ForeignKeyField(DeferredCategory)
-    count = IntegerField()
+    count = IntegerField(null=True)
 
 
 class Category(BaseModel):
     id = PrimaryKeyField(primary_key=True)
     name = CharField()
-    products = ForeignKeyField(Product, null=True)
-
-
-class Order(BaseModel):
-    id = PrimaryKeyField(primary_key=True)
-    user_id = IntegerField()
-    product = ForeignKeyField(Product)
-    count = IntegerField()
 
 
 class Users(BaseModel):
     id = IntegerField()
     name = CharField()
     is_admin = BooleanField(default=False)
-    orders = ForeignKeyField(Order, null=True,default=False)
+    data = TextField(default="{}")
 
+class Order(BaseModel):
+    id = PrimaryKeyField(primary_key=True)
+    user = ForeignKeyField(Users)
+    product = ForeignKeyField(Product)
+    count = IntegerField(null=True)
 
 DeferredCategory.set_model(Category)
 
@@ -47,7 +46,7 @@ base.create_tables([Users, Order, Category, Product], safe=True)
 
 
 def get_user(chat):
-    return Users.get_or_create(id=chat.id, name=chat.username,)
+    return Users.get_or_create(id=chat.id, name=chat.username)
 
 
 def add_category(name):
@@ -97,3 +96,10 @@ def change_category_product(id, category):
 
 def delete_product(id):
     Product.get(id=id).delete_instance()
+
+def get_user_date(user):
+    return json.loads(user.data)
+
+def set_user_data(user,data):
+    user.data = json.dumps(data)
+    user.save()

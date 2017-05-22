@@ -1,8 +1,11 @@
 # coding=utf-8
-import telebot
-import config
-from db import *
 import logging
+
+import telebot
+
+import config
+from bots.db import *
+from bots.utils import *
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
@@ -24,17 +27,17 @@ def get_menu():
 def cat_list():
     keyboard = telebot.types.InlineKeyboardMarkup()
     for cat in Category.select():
-        keyboard.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data="category_" + str(cat.id) + "_1"))
+        keyboard.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data="category_" + str(cat.id)))
     return keyboard
 
 
-def prod_list(offset, category):
+def prod_list(category):
     keyboad = telebot.types.InlineKeyboardMarkup()
     for prod in Product.select().where(Product.category == Category.get(Category.id == int(category)),
-                                       Product.count > 0).paginate(int(offset), 20):
+                                       Product.count > 0):
         keyboad.add(telebot.types.InlineKeyboardButton(
             text=prod.title + u" " + config.currency + "{0:.2f}".format(prod.price / 100),
-            callback_data="product_" + str(prod.id) + "_" + category + "_" + str(offset)))
+            callback_data="product_" + str(prod.id) + "_" + category))
     return keyboad
 
 
@@ -61,101 +64,6 @@ def get_orders_list(user):
     return keyboard
 
 
-def process_create_category(message):
-    user, create = get_user(message.chat)
-    if user.is_admin:
-        if len(message.text) > 0:
-            cat_name = message.text
-            Category.create(name=cat_name)
-            key = telebot.types.InlineKeyboardMarkup()
-            key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
-            bot.send_message(message.chat.id, u"Категория " + message.text + u" добавлена", reply_markup=key)
-        else:
-            bot.reply_to(message, "Не приемлемое название категории")
-
-
-def process_create_product_photo(message):
-    user, create = get_user(message.chat)
-    if user.is_admin:
-        if len(message.photo) > 0:
-            save = get_user_date(user)
-            file_id = message.photo[-1].file_id
-            cat = Category.get(Category.id == int(save["category"]))
-            prod = Product.create(img=file_id, category=cat)
-            save["prod_id"] = prod.id
-            set_user_data(user, save)
-            msg = bot.send_message(message.chat.id, "Введите имя товара: ")
-            bot.register_next_step_handler(msg, process_create_product_title)
-        else:
-            bot.send_message(message.chat.id, "Не могу найти фото")
-
-
-def process_create_product_title(message):
-    user, create = get_user(message.chat)
-    if user.is_admin:
-        if len(message.text) > 0:
-            save = get_user_date(user)
-            prod = Product.get(Product.id == int(save["prod_id"]))
-            prod.title = message.text
-            prod.save()
-            msg = bot.send_message(message.chat.id, "Введите описание товара 200 символов:")
-            bot.register_next_step_handler(msg, process_create_product_description)
-        else:
-            bot.send_message(message.chat.id, "Не могу найти имя товара:")
-
-
-def process_create_product_description(message):
-    user, create = get_user(message.chat)
-    if user.is_admin:
-        if 0 < len(message.text):
-            save = get_user_date(user)
-            prod = Product.get(Product.id == int(save["prod_id"]))
-            prod.description = message.text
-            prod.save()
-            msg = bot.send_message(message.chat.id, "Укажите цену товара пример: 3.22")
-            bot.register_next_step_handler(msg, process_create_product_price)
-        else:
-            bot.send_message(message.chat.id, "Укажите описание товара")
-
-
-def process_create_product_price(message):
-    user, create = get_user(message.chat)
-    if user.is_admin:
-        if len(message.text) > 0:
-            try:
-                save = get_user_date(user)
-                prod = Product.get(Product.id == int(save["prod_id"]))
-                prod.price = int(float(message.text.replace(",", ".").strip()) * 100)
-                prod.save()
-                msg = bot.send_message(message.chat.id, "Укажите количество товаров: 3")
-                bot.register_next_step_handler(msg, process_create_product_count)
-            except:
-                bot.send_message(message.chat.id, "Цена не является числом")
-        else:
-            bot.send_message(message.chat.id, "Укажите цену товара")
-
-
-def process_create_product_count(message):
-    user, create = get_user(message.chat)
-    if user.is_admin:
-        if len(message.text) > 0:
-            if message.text.isdigit():
-                save = get_user_date(user)
-                prod = Product.get(Product.id == int(save["prod_id"]))
-                prod.count = int(message.text.strip())
-                prod.save()
-                key = telebot.types.InlineKeyboardMarkup()
-                key.add(telebot.types.InlineKeyboardButton(text=u"Добавить еще товар", callback_data="add_product"))
-                key.add(telebot.types.InlineKeyboardButton(
-                    text=u"Посмотреть товары в категории " + Category.get(Category.id == int(save["category"])).name,
-                    callback_data="category_" + save["category"] + "_1"))
-                bot.send_message(message.chat.id, u"Товар " + prod.title + u" успешно добавлен", reply_markup=key)
-            else:
-                bot.send_message(message.chat.id, "Количество не является числом")
-        else:
-            bot.send_message(message.chat.id, "Укажите количество товаров")
-
-
 @bot.message_handler(commands=["start", "help"])
 def start(message):
     get_user(message.chat)
@@ -168,9 +76,11 @@ def callback_inline(call):
     if call.message:
         user, created = get_user(call.message.chat)
         ers = call.data.split("_")
+        # TODO показываем меню
         if call.data == "start":
             key = get_menu()
             bot.send_message(call.message.chat.id, "Выберете пункт меню:", reply_markup=key)
+        # TODO показываем список категорий и кнопки редактирования категорий
         if call.data == "shop":
             key = cat_list()
             if user.is_admin:
@@ -180,37 +90,44 @@ def callback_inline(call):
             bot.send_message(call.message.chat.id, "Выберете категорию товара:", reply_markup=key)
         if call.data == "basket":
             key = get_orders_list(user)
-            bot.send_message(call.message.chat.id, "Ваша корзина")
+            bot.send_message(call.message.chat.id, "Ваша корзина", reply_markup=key)
+        # TODO Показываем список товаров в конкретной категории
         if ers[0] == "category":
             if len(ers) > 1:
-                if len(ers) < 3:
-                    ers.append(1)
-                key = prod_list(ers[2], ers[1])
+                key = prod_list(ers[1])
                 save = get_user_date(user)
                 save["category"] = ers[1]
                 set_user_data(user, save)
                 if user.is_admin:
                     key.add(telebot.types.InlineKeyboardButton(text="Добавить товар", callback_data="add_product"))
-
-                if paginarion(ers[2], ers[1]):
-                    back = telebot.types.InlineKeyboardButton(text="Назад",
-                                                              callback_data="category_" + str(ers[1]) + "_" + str(
-                                                                  ers[2]))
-                    next = telebot.types.InlineKeyboardButton(text="Вперед",
-                                                              callback_data="category_" + str(ers[1]) + "_" + str(
-                                                                  int(ers[2]) + 1))
-                    key.row(back, next)
                 key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
                 bot.send_message(call.message.chat.id, "Выберете товар:", reply_markup=key)
+        # TODO Показываем фото,описание,цену продукта и кнопки редактирования если пользователь админ
         if ers[0] == "product":
             if len(ers) > 1:
                 product = Product.get(Product.id == int(ers[1]))
                 key = telebot.types.InlineKeyboardMarkup()
-                key.add(telebot.types.InlineKeyboardButton(text=u"Добавить в корзину " + get_price(product),
-                                                           callback_data="buy_" + str(product.id)))
+                img = telebot.types.InlineKeyboardButton(text=u"\U0001F5BC",
+                                                         callback_data="edit_prod_img_" + str(product.id))
+                title = telebot.types.InlineKeyboardButton(text=u"\u270F\uFE0F",
+                                                           callback_data="edit_prod_title_" + str(product.id))
+                description = telebot.types.InlineKeyboardButton(text=u"\U0001F4DD",
+                                                                 callback_data="edit_prod_desc_" + str(product.id))
+                price = telebot.types.InlineKeyboardButton(text=u"\U0001F4B6",
+                                                           callback_data="edit_prod_price_" + str(product.id))
+                count = telebot.types.InlineKeyboardButton(text=u"\U0001F4E6",
+                                                           callback_data="edit_prod_count_" + str(product.id))
+                category = telebot.types.InlineKeyboardButton(text=u"\U0001F4C2",
+                                                              callback_data="edit_prod_cat_" + str(product.id))
+
+                key.row(img, title, description, category, price, count)
+                key.add(telebot.types.InlineKeyboardButton(
+                    text=u"Добавить в корзину " + get_price(product) + u" " + str(product.count),
+                    callback_data="buy_" + str(product.id)))
                 key.add(
-                    telebot.types.InlineKeyboardButton(text="Назад", callback_data="category_" + ers[2] + "_" + ers[3]))
+                    telebot.types.InlineKeyboardButton(text="Назад", callback_data="category_" + ers[2]))
                 bot.send_photo(call.message.chat.id, photo=product.img, caption=product.description, reply_markup=key)
+        # TODO Обработка покупки
         if ers[0] == "buy":
             if len(ers) > 1:
                 product = Product.get(Product.id == ers[1])
@@ -223,13 +140,35 @@ def callback_inline(call):
                 bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text=u"Товар "
                                                                                             u"добавлен в "
                                                                                             u"корзину")
+        # TODO Обработка кнопок добавления
         if ers[0] == "add":
+            # TODO запускаем шаги добавлениея котегории
             if ers[1] == "category":
                 msg = bot.send_message(call.message.chat.id, "Введите название категории")
                 bot.register_next_step_handler(msg, process_create_category)
+            # TODO запускаем шаги добавления товара
             if ers[1] == "product":
                 msg = bot.send_message(call.message.chat.id, "Пришлите фото товара")
                 bot.register_next_step_handler(msg, process_create_product_photo)
+        # TODO Удаление котегории и товаров
+        if ers[0] == "del":
+            if ers[1] == "category":
+                key = telebot.types.InlineKeyboardMarkup()
+                for cat in Category.select():
+                    key.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data="del_cat_" + str(cat.id)))
+                key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
+                bot.send_message(call.message.chat.id, "Категория удалится вместе с товарами которые в ней",
+                                 reply_markup=key)
+            if ers[1] == "cat":
+                cat = Category.get(Category.id == int(ers[2]))
+                name = cat.name
+                for prod in Product.select().where(Product.category == cat):
+                    prod.delete_instance()
+                cat.delete_instance()
+                key = telebot.types.InlineKeyboardMarkup()
+                key.add(telebot.types.InlineKeyboardButton(text="Удалить еще категорию", callback_data="del_category"))
+                key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
+                bot.send_message(call.message.chat.id, u"Категория " + name + u" и все товары в ней удалены")
 
 
 bot.polling()

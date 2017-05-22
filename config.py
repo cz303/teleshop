@@ -1,3 +1,2 @@
 API_TOKEN = ""
-
 currency = "$"

@@ -29,7 +29,7 @@ class Category(BaseModel):
 
 class Users(BaseModel):
     id = IntegerField()
-    name = CharField()
+    name = CharField(null=True)
     is_admin = BooleanField(default=False)
     data = TextField(default="{}")
 

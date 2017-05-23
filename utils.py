@@ -12,19 +12,20 @@ class Util:
     def process_create_category(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None:
                 cat_name = message.text
                 self.db.Category.create(name=cat_name)
                 key = telebot.types.InlineKeyboardMarkup()
                 key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
                 self.bot.send_message(message.chat.id, u"Категория " + message.text + u" добавлена", reply_markup=key)
             else:
-                self.bot.reply_to(message, "Не приемлемое название категории")
+                msg = self.bot.reply_to(message, "Не приемлемое название категории")
+                self.bot.register_next_step_handler(msg, self.process_create_category)
 
     def process_create_product_photo(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if len(message.photo) > 0:
+            if message.photo is not None:
                 save = self.db.get_user_date(user)
                 file_id = message.photo[-1].file_id
                 cat = self.db.Category.get(self.db.Category.id == int(save["category"]))
@@ -34,12 +35,13 @@ class Util:
                 msg = self.bot.send_message(message.chat.id, "Введите имя товара: ")
                 self.bot.register_next_step_handler(msg, self.process_create_product_title)
             else:
-                self.bot.send_message(message.chat.id, "Не могу найти фото")
+                msg = self.bot.send_message(message.chat.id, "Не могу найти фото")
+                self.bot.register_next_step_handler(msg, self.process_create_product_photo)
 
     def process_create_product_title(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None > 0:
                 save = self.db.get_user_date(user)
                 prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                 prod.title = message.text
@@ -47,12 +49,13 @@ class Util:
                 msg = self.bot.send_message(message.chat.id, "Введите описание товара 200 символов:")
                 self.bot.register_next_step_handler(msg, self.process_create_product_description)
             else:
-                self.bot.send_message(message.chat.id, "Не могу найти имя товара:")
+                msg = self.bot.send_message(message.chat.id, "Не могу найти имя товара:")
+                self.bot.register_next_step_handler(msg, self.process_create_product_title)
 
     def process_create_product_description(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if 0 < len(message.text):
+            if message.text is not None:
                 save = self.db.get_user_date(user)
                 prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                 prod.description = message.text
@@ -60,12 +63,13 @@ class Util:
                 msg = self.bot.send_message(message.chat.id, "Укажите цену товара пример: 3.22")
                 self.bot.register_next_step_handler(msg, self.process_create_product_price)
             else:
-                self.bot.send_message(message.chat.id, "Укажите описание товара")
+                msg = self.bot.send_message(message.chat.id, "Укажите описание товара")
+                self.bot.register_next_step_handler(msg, self.process_create_product_description)
 
     def process_create_product_price(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None:
                 try:
                     save = self.db.get_user_date(user)
                     prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
@@ -74,14 +78,16 @@ class Util:
                     msg = self.bot.send_message(message.chat.id, "Укажите количество товаров: 3")
                     self.bot.register_next_step_handler(msg, self.process_create_product_count)
                 except:
-                    self.bot.send_message(message.chat.id, "Цена не является числом")
+                    msg = self.bot.send_message(message.chat.id, "Цена не является числом")
+                    self.bot.register_next_step_handler(msg, self.process_create_product_price)
             else:
-                self.bot.send_message(message.chat.id, "Укажите цену товара")
+                msg = self.bot.send_message(message.chat.id, "Укажите цену товара")
+                self.bot.register_next_step_handler(msg, self.process_create_product_price)
 
     def process_create_product_count(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None:
                 if message.text.isdigit():
                     try:
                         save = self.db.get_user_date(user)
@@ -98,83 +104,96 @@ class Util:
                         self.bot.send_message(message.chat.id, u"Товар " + prod.title + u" успешно добавлен",
                                               reply_markup=key)
                     except:
-                        self.bot.send_message(message.chat.id, "Количество не является числом")
+                        msg = self.bot.send_message(message.chat.id, "Количество не является числом")
+                        self.bot.register_next_step_handler(msg, self.process_create_product_count)
                 else:
-                    self.bot.send_message(message.chat.id, "Количество не является числом")
+                    msg = self.bot.send_message(message.chat.id, "Количество не является числом")
+                    self.bot.register_next_step_handler(msg, self.process_create_product_count)
             else:
-                self.bot.send_message(message.chat.id, "Укажите количество товаров")
+                msg = self.bot.send_message(message.chat.id, "Укажите количество товаров")
+                self.bot.register_next_step_handler(msg, self.process_create_product_count)
 
     def get_price(self, product):
-        return config.currency + "{0:.2f}".format(product.price / 100)
+        if product.price is not None:
+            return config.currency + "{0:.2f}".format(product.price / 100)
+        else:
+            return config.currency + u"0"
 
     def edit_prod_img(self, message):
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
-            if len(message.photo) > 0:
+            if message.text is not None:
                 file_id = message.photo[-1].file_id
                 prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                 prod.img = file_id
                 prod.save()
                 self.send_product(message.chat, prod.id)
             else:
-                self.bot.send_message(message.chat.id, "Не могу найти фото")
+                msg = self.bot.send_message(message.chat.id, "Не могу найти фото")
+                self.bot.register_next_step_handler(msg, self.edit_prod_img)
 
     def edit_prod_title(self, message):
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None:
                 prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                 prod.title = message.text
                 prod.save()
-                self.send_product(message.chat.id, prod.id)
+                self.send_product(message.chat, prod.id)
             else:
-                self.bot.send_message(message.chat.id, "Некоректно указан текст")
+                msg = self.bot.send_message(message.chat.id, "Некоректно указан текст")
+                self.bot.register_next_step_handler(msg, self.edit_prod_title)
 
     def edit_prod_description(self, message):
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None:
                 prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                 prod.description = message.text
                 prod.save()
-                self.send_product(message.chat.id, prod.id)
+                self.send_product(message.chat, prod.id)
             else:
-                self.bot.send_message(message.chat.id, "Некоректно указан текст")
+                msg = self.bot.send_message(message.chat.id, "Некоректно указан текст")
+                self.bot.register_next_step_handler(msg, self.edit_prod_description)
 
     def edit_prod_price(self, message):
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
-            if len(message.text) > 0:
+            if message.text is not None:
                 try:
                     prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                     prod.price = int(float(message.text.replace(",", ".").strip()) * 100)
                     prod.save()
-                    self.send_product(message.chat.id, prod.id)
+                    self.send_product(message.chat, prod.id)
                 except:
-                    self.bot.send_message(message.chat.id, "Цена не является числом")
+                    msg = self.bot.send_message(message.chat.id, "Цена не является числом")
+                    self.bot.register_next_step_handler(msg, self.edit_prod_price)
             else:
-                self.bot.send_message(message.chat.id, "Некоректно указан текст")
+                msg = self.bot.send_message(message.chat.id, "Некоректно указан текст")
+                self.bot.register_next_step_handler(msg, self.edit_prod_price)
 
     def edit_prod_count(self, message):
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
-            if len(message.text) > 0:
-                try:
+            if message.text is not None:
+                if message.text.isdigit():
                     prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
                     prod.count = int(message.text.strip())
                     prod.save()
-                    self.send_product(message.chat.id, prod.id)
-                except:
-                    self.bot.send_message(message.chat.id, "Количество не является числом")
+                    self.send_product(message.chat, prod.id)
+                else:
+                    msg = self.bot.send_message(message.chat.id, "Количество не является числом")
+                    self.bot.register_next_step_handler(msg, self.edit_prod_count)
             else:
-                self.bot.send_message(message.chat.id, "Укажите количество товаров")
+                msg = self.bot.send_message(message.chat.id, "Укажите количество товаров")
+                self.bot.register_next_step_handler(msg, self.edit_prod_count)
 
-    def edit_cat_name(self,message):
+    def edit_cat_name(self, message):
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
@@ -183,8 +202,9 @@ class Util:
             cat.name = message.text
             cat.save()
             key = telebot.types.InlineKeyboardMarkup()
-            key.add(telebot.types.InlineKeyboardButton(text="К категории",callback_data="category_"+str(cat.id)))
-            self.bot.send_message(message.chat.id,u"Категория "+oldname+u" переименована в "+message.text,reply_markup=key)
+            key.add(telebot.types.InlineKeyboardButton(text="К категории", callback_data="category_" + str(cat.id)))
+            self.bot.send_message(message.chat.id, u"Категория " + oldname + u" переименована в " + message.text,
+                                  reply_markup=key)
 
     def send_product(self, chat, id):
         user, cre = self.db.get_user(chat)

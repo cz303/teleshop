@@ -1,12 +1,9 @@
 # coding=utf-8
-import logging
 import telebot
 import config
 import db
 import utils
 
-logger = telebot.logger
-telebot.logger.setLevel(logging.DEBUG)
 bot = telebot.TeleBot(config.API_TOKEN)
 
 menu = {
@@ -33,10 +30,11 @@ def cat_list(tag):
 
 def prod_list(category):
     keyboad = telebot.types.InlineKeyboardMarkup()
+    i=1
     for prod in db.Product.select().where(db.Product.category == db.Category.get(db.Category.id == int(category)),
                                           db.Product.count > 0):
         keyboad.add(telebot.types.InlineKeyboardButton(
-            text=prod.title + u" " + config.currency + "{0:.2f}".format(prod.price / 100),
+            text=i+u" "+prod.title + u" " + config.currency + "{0:.2f}".format(prod.price / 100),
             callback_data="product_" + str(prod.id) + "_" + category))
     return keyboad
 
@@ -82,8 +80,9 @@ def callback_inline(call):
             key.add(telebot.types.InlineKeyboardButton(text="Меню", callback_data="start"))
             bot.send_message(call.message.chat.id, "Выберете категорию товара:", reply_markup=key)
         if call.data == "basket":
-            key = get_orders_list(user)
-            bot.send_message(call.message.chat.id, "Ваша корзина", reply_markup=key)
+            bot.send_message(call.message.chat.id,"Пока в разработке")
+            #key = get_orders_list(user)
+            #bot.send_message(call.message.chat.id, "Ваша корзина", reply_markup=key)
         # TODO Показываем список товаров в конкретной категории
         if ers[0] == "category":
             if len(ers) > 1:
@@ -99,6 +98,8 @@ def callback_inline(call):
         # TODO Показываем фото,описание,цену продукта и кнопки редактирования если пользователь админ
         if ers[0] == "product":
             if len(ers) > 1:
+                save["prod_id"]=ers[1]
+                db.set_user_data(user,save)
                 ut.send_product(call.message.chat,ers[1])
 
         # TODO Обработка покупки
@@ -145,7 +146,6 @@ def callback_inline(call):
                 bot.send_message(call.message.chat.id, u"Категория " + name + u" и все товары в ней удалены")
         if ers[0] == "edit":
             if ers[1] == "prod":
-                save['prod_id'] = ers[3]
                 if ers[2] == "img":
                     msg = bot.send_message(call.message.chat.id,"Пришлите новое фото товара:")
                     bot.register_next_step_handler(msg,ut.edit_prod_img)
@@ -162,14 +162,14 @@ def callback_inline(call):
                     msg = bot.send_message(call.message.chat.id, "Пришлите количество товара")
                     bot.register_next_step_handler(msg, ut.edit_prod_count)
                 if ers[2] == "cat":
-                    key = cat_list("category_setcat_")
+                    key = cat_list("edit_prod_setcat_")
                     bot.send_message(call.message.chat.id, "Выбирите категорию",reply_markup=key)
                 if ers[2]=="setcat":
                     prod = db.Product.get(db.Product.id == int(save["prod_id"]))
                     cat = db.Category.get(db.Category.id==int(ers[3]))
                     prod.category=cat
                     prod.save()
-                    ut.send_product(call.message.chat,save["prod_id"])
+                    ut.send_product(call.message.chat,prod.id)
             if ers[1]=="category":
                 if ers[2]=="rename":
                     cat = db.Category.get(db.Category.id == int(save["category"]))

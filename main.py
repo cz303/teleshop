@@ -75,7 +75,7 @@ def callback_inline(call):
             bot.send_message(call.message.chat.id, "Выберете пункт меню:", reply_markup=key)
         # TODO показываем список категорий и кнопки редактирования категорий
         if call.data == "shop":
-            key = cat_list("category")
+            key = cat_list("category_")
             if user.is_admin:
                 key.add(telebot.types.InlineKeyboardButton(text="Добавить категорию", callback_data="add_category"))
                 key.add(telebot.types.InlineKeyboardButton(text="Удалить категорию", callback_data="del_category"))
@@ -170,12 +170,11 @@ def callback_inline(call):
                     prod.category=cat
                     prod.save()
                     ut.send_product(call.message.chat,save["prod_id"])
-
             if ers[1]=="category":
                 if ers[2]=="rename":
                     cat = db.Category.get(db.Category.id == int(save["category"]))
                     msg = bot.send_message(call.message.chat.id,u"Пришлите новое имя категории "+cat.name)
-                    bot.register_next_step_handler(msg,)
+                    bot.register_next_step_handler(msg,ut.edit_cat_name)
 
 
 

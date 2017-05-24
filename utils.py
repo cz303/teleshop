@@ -224,7 +224,7 @@ class Util:
             count = telebot.types.InlineKeyboardButton(text=u"\U0001F4E6",
                                                        callback_data="edit_prod_count_" + str(product.id))
             category = telebot.types.InlineKeyboardButton(text=u"\U0001F4C2",
-                                                          callback_data="edit_prod_cat_" + str(product.id))
+                                                          callback_data="edit>prod>category>" + str(product.id))
 
             key.row(img, title, description, category, price, count)
         key.add(telebot.types.InlineKeyboardButton(

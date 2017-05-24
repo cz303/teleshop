@@ -21,26 +21,41 @@ def get_menu():
     return keyboard
 
 
-def cat_list(tag):
+def cat_list(tag, prod=None):
     keyboard = telebot.types.InlineKeyboardMarkup()
     for cat in db.Category.select():
-        keyboard.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data=tag + str(cat.id)))
+        if prod is not None:
+            strs = tag + str(cat.id) + ">" + prod
+        else:
+            strs = tag + str(cat.id)
+        keyboard.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data=strs))
     return keyboard
 
 
-def prod_list(category):
+# TODO это пиздец
+def prod_list(category, is_admin=False):
     keyboad = telebot.types.InlineKeyboardMarkup()
-    i = 1
-    for prod in db.Product.select().where(db.Product.category == db.Category.get(db.Category.id == int(category)),
-                                          db.Product.count > 0):
-        keyboad.add(telebot.types.InlineKeyboardButton(
-            text=i + u" " + prod.title + u" " + config.currency + "{0:.2f}".format(prod.price / 100),
-            callback_data="product>" + str(prod.id) + ":int>" + category))
+    if is_admin:
+        for prod in db.Product.select().where(db.Product.category == db.Category.get(db.Category.id == int(category))):
+            price = get_price(prod)
+            title = prod.title if prod.title is not None else u"Без имени"
+            keyboad.add(telebot.types.InlineKeyboardButton(
+                text=u" " + title + u" " + price,
+                callback_data="product>" + str(prod.id) + ":int>" + category))
+    else:
+        for prod in db.Product.select().where(db.Product.category == db.Category.get(db.Category.id == int(category)),
+                                              db.Product.name != None, db.Product.count > 0):
+            keyboad.add(telebot.types.InlineKeyboardButton(
+                text=u" " + prod.title + u" " + get_price(prod),
+                callback_data="product>" + str(prod.id) + ":int>" + category))
     return keyboad
 
 
 def get_price(product):
-    return config.currency + "{0:.2f}".format(product.price / 100)
+    if product.price is not None:
+        return config.currency + "{0:.2f}".format(product.price / 100)
+    else:
+        return config.currency + u"0"
 
 
 def get_orders_list(user):
@@ -82,13 +97,16 @@ def shop(call):
 def category(call):
     user, cre = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    key = prod_list(save.id)
+    if user.is_admin:
+        key = prod_list(save.get("id"), is_admin=True)
+    else:
+        key = prod_list(save.get('id'))
     save = db.get_user_date(user)
     db.set_user_data(user, save)
     if user.is_admin:
         key.add(telebot.types.InlineKeyboardButton(text="Добавить товар", callback_data="add_product"))
         key.add(telebot.types.InlineKeyboardButton(text="Переименовать категорию",
-                                                   callback_data="edit_category_rename"))
+                                                   callback_data="edit>category>rename>" + save.get("id")))
     key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
     bot.send_message(call.message.chat.id, "Выберете товар:",
                      reply_markup=key)
@@ -182,27 +200,32 @@ def edit_prod_count(call):
     bot.register_next_step_handler(msg, ut.edit_prod_count)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>category", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>category>prod_id:int", call))
 def edit_prod_category(call):
-    key = cat_list("edit>prod>setcat>")
+    user, c = db.get_user(call.message.chat)
+    save = db.get_user_date(user)
+    key = cat_list("edit>prod>setcat>", prod=save.prod_id)
     bot.send_message(call.message.chat.id, "Выбирите категорию", reply_markup=key)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>setcat>cat_id:int"))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>setcat>cat_id:int>prod_id:int", call))
 def edit_prod_set_category(call):
-    user,c=db.get_user(call.message.chat)
+    user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    prod = db.Product.get(db.Product.id == int(save["prod_id"]))
-    cat = db.Category.get(db.Category.id == int(ers[3]))
+    prod = db.Product.get(db.Product.id == save.prod_id)
+    cat = db.Category.get(db.Category.id == save.cat_id)
     prod.category = cat
     prod.save()
     ut.send_product(call.message.chat, prod.id)
 
-#             if ers[1] == "category":
-#                 if ers[2] == "rename":
-#                     cat = db.Category.get(db.Category.id == int(save["category"]))
-#                     msg = bot.send_message(call.message.chat.id, u"Пришлите новое имя категории " + cat.name)
-#                     bot.register_next_step_handler(msg, ut.edit_cat_name)
+
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>category>rename>cat_id:int", call))
+def rename_category(call):
+    user, c = db.get_user(call.message.chat)
+    save = db.get_user_date(user)
+    cat = db.Category.get(db.Category.id == save.cat_id)
+    msg = bot.send_message(call.message.chat.id, u"Пришлите новое имя категории " + cat.name)
+    bot.register_next_step_handler(msg, ut.edit_cat_name)
 
 
 bot.polling()

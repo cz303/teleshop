@@ -1,4 +1,6 @@
 # coding=utf-8
+import types
+
 import telebot
 
 import config
@@ -227,7 +229,42 @@ class Util:
             key.row(img, title, description, category, price, count)
         key.add(telebot.types.InlineKeyboardButton(
             text=u"Добавить в корзину " + self.get_price(product) + u" " + str(product.count),
-            callback_data="buy_" + str(product.id)))
+            callback_data="buy>" + str(product.id)+":int"))
         key.add(
             telebot.types.InlineKeyboardButton(text="Назад", callback_data="category_" + str(product.category.id)))
         self.bot.send_photo(chat.id, photo=product.img, caption=product.description, reply_markup=key)
+
+    def ruleParser(self, rule):
+        result = []
+        params = rule.split(">")
+        for index, param in enumerate(params):
+            if param.find(":") > 0:
+                par = param.split(":")
+                result.append({par[0]: par[1]})
+            else:
+                result.append(param)
+        return result
+
+    def routes(self, rule, routes):
+        routs = routes.data.split(">")
+        params = {}
+        rul = self.ruleParser(rule)
+        for index, route in enumerate(routs):
+            if type(rul[index]) == types.StringType:
+                if route != rul[index]:
+                    return False
+            if type(rul[index]) == types.DictType:
+                paramName = (rul[index].keys())[0]
+                if rul[index][paramName] == "str":
+                    if not route.isalnum():
+                        return False
+                    else:
+                        params.update({paramName:route})
+                if rul[index][paramName] == "int":
+                    if not  route.isdigit():
+                        return False
+                    else:
+                        params.update({paramName: route})
+        user,cre = self.db.get_user(routes.message.chat)
+        self.db.set_user_data(user,params)
+        return True

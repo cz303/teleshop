@@ -1,0 +1,9 @@
+appdirs==1.4.3
+packaging==16.8
+peewee==2.10.1
+psycopg2==2.7.1
+pyDAL==17.3
+pyparsing==2.2.0
+pyTelegramBotAPI==3.0.0
+requests==2.14.2
+six==1.10.0

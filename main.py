@@ -1,10 +1,20 @@
 # coding=utf-8
+import os
+
 import telebot
 import config
 import db
 import utils
 
+
+from flask import Flask,request
+
+
+
+
 bot = telebot.TeleBot(config.API_TOKEN)
+
+server = Flask(__name__)
 
 menu = {
     "shop": "Магазин",
@@ -242,4 +252,16 @@ def del_prod_sclad(call):
     key.add(telebot.types.InlineKeyboardButton(text="К Категории", callback_data="category>" + str(cat)))
     bot.send_message(call.message.chat.id,text=u"Товар "+name+u" успешно удален",reply_markup=key)
 
-bot.polling()
+
+@server.route("/bot",methods=['POST'])
+def getMessaage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!",200
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url=config.url)
+    return "!",200
+
+server.run(host="0.0.0.0",port=os.environ.get("PORT",5000))

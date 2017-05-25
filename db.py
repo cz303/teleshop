@@ -2,7 +2,16 @@ import json
 
 from peewee import *
 
-base = SqliteDatabase("base.db")
+import config
+
+#base = SqliteDatabase("base.db")
+
+base = PostgresqlDatabase(
+    "shop",
+    user="hxneckwf",
+    password="0OclLgZRKdxj5NMfzQLKoNavKyruwT_2",
+    host="qdjjtnkv.db.elephantsql.com",
+)
 
 DeferredCategory = DeferredRelation()
 

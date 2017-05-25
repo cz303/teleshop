@@ -30,7 +30,7 @@ class Util:
             if message.photo is not None:
                 save = self.db.get_user_date(user)
                 file_id = message.photo[-1].file_id
-                cat = self.db.Category.get(self.db.Category.id == int(save["category"]))
+                cat = self.db.Category.get(self.db.Category.id == int(save.get("cat_id")))
                 prod = self.db.Product.create(img=file_id, category=cat)
                 save["prod_id"] = prod.id
                 self.db.set_user_data(user, save)
@@ -43,9 +43,9 @@ class Util:
     def process_create_product_title(self, message):
         user, create = self.db.get_user(message.chat)
         if user.is_admin:
-            if message.text is not None > 0:
+            if message.text is not None:
                 save = self.db.get_user_date(user)
-                prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                 prod.title = message.text
                 prod.save()
                 msg = self.bot.send_message(message.chat.id, "Введите описание товара 200 символов:")
@@ -59,7 +59,7 @@ class Util:
         if user.is_admin:
             if message.text is not None:
                 save = self.db.get_user_date(user)
-                prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                 prod.description = message.text
                 prod.save()
                 msg = self.bot.send_message(message.chat.id, "Укажите цену товара пример: 3.22")
@@ -74,7 +74,7 @@ class Util:
             if message.text is not None:
                 try:
                     save = self.db.get_user_date(user)
-                    prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                    prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                     prod.price = int(float(message.text.replace(",", ".").strip()) * 100)
                     prod.save()
                     msg = self.bot.send_message(message.chat.id, "Укажите количество товаров: 3")
@@ -93,16 +93,16 @@ class Util:
                 if message.text.isdigit():
                     try:
                         save = self.db.get_user_date(user)
-                        prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                        prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                         prod.count = int(message.text.strip())
                         prod.save()
                         key = telebot.types.InlineKeyboardMarkup()
                         key.add(
-                            telebot.types.InlineKeyboardButton(text=u"Добавить еще товар", callback_data="add_product"))
+                            telebot.types.InlineKeyboardButton(text=u"Добавить еще товар", callback_data="add>product"))
                         key.add(telebot.types.InlineKeyboardButton(
                             text=u"Посмотреть товары в категории " + self.db.Category.get(
-                                self.db.Category.id == int(save["category"])).name,
-                            callback_data="category_" + save["category"] + "_1"))
+                                self.db.Category.id == int(save.get("cat_id"))).name,
+                            callback_data="category>" + save.get("cat_id")))
                         self.bot.send_message(message.chat.id, u"Товар " + prod.title + u" успешно добавлен",
                                               reply_markup=key)
                     except:
@@ -127,7 +127,7 @@ class Util:
         if user.is_admin:
             if message.text is not None:
                 file_id = message.photo[-1].file_id
-                prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                 prod.img = file_id
                 prod.save()
                 self.send_product(message.chat, prod.id)
@@ -140,7 +140,7 @@ class Util:
         save = self.db.get_user_date(user)
         if user.is_admin:
             if message.text is not None:
-                prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                 prod.title = message.text
                 prod.save()
                 self.send_product(message.chat, prod.id)
@@ -153,7 +153,7 @@ class Util:
         save = self.db.get_user_date(user)
         if user.is_admin:
             if message.text is not None:
-                prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                 prod.description = message.text
                 prod.save()
                 self.send_product(message.chat, prod.id)
@@ -167,7 +167,7 @@ class Util:
         if user.is_admin:
             if message.text is not None:
                 try:
-                    prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                    prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                     prod.price = int(float(message.text.replace(",", ".").strip()) * 100)
                     prod.save()
                     self.send_product(message.chat, prod.id)
@@ -184,7 +184,7 @@ class Util:
         if user.is_admin:
             if message.text is not None:
                 if message.text.isdigit():
-                    prod = self.db.Product.get(self.db.Product.id == int(save["prod_id"]))
+                    prod = self.db.Product.get(self.db.Product.id == int(save.get("prod_id")))
                     prod.count = int(message.text.strip())
                     prod.save()
                     self.send_product(message.chat, prod.id)
@@ -204,7 +204,7 @@ class Util:
             cat.name = message.text
             cat.save()
             key = telebot.types.InlineKeyboardMarkup()
-            key.add(telebot.types.InlineKeyboardButton(text="К категории", callback_data="category_" + str(cat.id)))
+            key.add(telebot.types.InlineKeyboardButton(text="К категории", callback_data="category>" + str(cat.id)))
             self.bot.send_message(message.chat.id, u"Категория " + oldname + u" переименована в " + message.text,
                                   reply_markup=key)
 
@@ -214,24 +214,26 @@ class Util:
         key = telebot.types.InlineKeyboardMarkup()
         if user.is_admin:
             img = telebot.types.InlineKeyboardButton(text=u"\U0001F5BC",
-                                                     callback_data="edit_prod_img_" + str(product.id))
+                                                     callback_data="edit>prod>img>" + str(product.id))
             title = telebot.types.InlineKeyboardButton(text=u"\u270F\uFE0F",
-                                                       callback_data="edit_prod_title_" + str(product.id))
+                                                       callback_data="edit>prod>title>" + str(product.id))
             description = telebot.types.InlineKeyboardButton(text=u"\U0001F4DD",
-                                                             callback_data="edit_prod_desc_" + str(product.id))
+                                                             callback_data="edit>prod>desc>" + str(product.id))
             price = telebot.types.InlineKeyboardButton(text=u"\U0001F4B6",
-                                                       callback_data="edit_prod_price_" + str(product.id))
+                                                       callback_data="edit>prod>price>" + str(product.id))
             count = telebot.types.InlineKeyboardButton(text=u"\U0001F4E6",
-                                                       callback_data="edit_prod_count_" + str(product.id))
+                                                       callback_data="edit>prod>count>" + str(product.id))
             category = telebot.types.InlineKeyboardButton(text=u"\U0001F4C2",
                                                           callback_data="edit>prod>category>" + str(product.id))
 
             key.row(img, title, description, category, price, count)
+            key.add(telebot.types.InlineKeyboardButton(text="Удалить товар",callback_data="del>product>"+str(product.id)))
+
         key.add(telebot.types.InlineKeyboardButton(
-            text=u"Добавить в корзину " + self.get_price(product) + u" " + str(product.count),
-            callback_data="buy>" + str(product.id)+":int"))
+            text=u"Добавить в корзину " + self.get_price(product),
+            callback_data="buy>" + str(product.id)))
         key.add(
-            telebot.types.InlineKeyboardButton(text="Назад", callback_data="category_" + str(product.category.id)))
+            telebot.types.InlineKeyboardButton(text="Назад", callback_data="category>" + str(product.category.id)))
         self.bot.send_photo(chat.id, photo=product.img, caption=product.description, reply_markup=key)
 
     def ruleParser(self, rule):

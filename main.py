@@ -41,13 +41,13 @@ def prod_list(category, is_admin=False):
             title = prod.title if prod.title is not None else u"Без имени"
             keyboad.add(telebot.types.InlineKeyboardButton(
                 text=u" " + title + u" " + price,
-                callback_data="product>" + str(prod.id) + ":int>" + category))
+                callback_data="product>" + str(prod.id) + ">" + category))
     else:
         for prod in db.Product.select().where(db.Product.category == db.Category.get(db.Category.id == int(category)),
                                               db.Product.name != None, db.Product.count > 0):
             keyboad.add(telebot.types.InlineKeyboardButton(
                 text=u" " + prod.title + u" " + get_price(prod),
-                callback_data="product>" + str(prod.id) + ":int>" + category))
+                callback_data="product>" + str(prod.id) + ">" + category))
     return keyboad
 
 
@@ -104,7 +104,8 @@ def category(call):
     save = db.get_user_date(user)
     db.set_user_data(user, save)
     if user.is_admin:
-        key.add(telebot.types.InlineKeyboardButton(text="Добавить товар", callback_data="add_product"))
+        key.add(
+            telebot.types.InlineKeyboardButton(text="Добавить товар", callback_data="add>product>" + save.get("id")))
         key.add(telebot.types.InlineKeyboardButton(text="Переименовать категорию",
                                                    callback_data="edit>category>rename>" + save.get("id")))
     key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
@@ -139,7 +140,7 @@ def add_category(call):
     bot.register_next_step_handler(msg, ut.process_create_category)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("add>product", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("add>product>cat_id:int", call))
 def add_product(call):
     msg = bot.send_message(call.message.chat.id, "Пришлите фото товара")
     bot.register_next_step_handler(msg, ut.process_create_product_photo)
@@ -170,31 +171,31 @@ def del_category(call):
     bot.send_message(call.message.chat.id, u"Категория " + name + u" и все товары в ней удалены")
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>img", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>img>prod_id:int", call))
 def edit_prod_photo(call):
     msg = bot.send_message(call.message.chat.id, "Пришлите новое фото товара:")
     bot.register_next_step_handler(msg, ut.edit_prod_img)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>title", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>title>prod_id:int", call))
 def edit_prod_title(call):
     msg = bot.send_message(call.message.chat.id, "Пришлите новое название")
     bot.register_next_step_handler(msg, ut.edit_prod_title)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>desc", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>desc>prod_id:int", call))
 def edit_prod_desc(call):
     msg = bot.send_message(call.message.chat.id, "Пришлите новое описание")
     bot.register_next_step_handler(msg, ut.edit_prod_description)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>price", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>price>prod_id:int", call))
 def edit_prod_price(call):
     msg = bot.send_message(call.message.chat.id, "Пришлите новую цену")
     bot.register_next_step_handler(msg, ut.edit_prod_price)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>count", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("edit>prod>count>prod_id:int", call))
 def edit_prod_count(call):
     msg = bot.send_message(call.message.chat.id, "Пришлите количество товара")
     bot.register_next_step_handler(msg, ut.edit_prod_count)
@@ -227,5 +228,18 @@ def rename_category(call):
     msg = bot.send_message(call.message.chat.id, u"Пришлите новое имя категории " + cat.name)
     bot.register_next_step_handler(msg, ut.edit_cat_name)
 
+@bot.callback_query_handler(func=lambda call: ut.routes("del>product>prod_id:int", call))
+def del_prod_sclad(call):
+    user, c = db.get_user(call.message.chat)
+    save = db.get_user_date(user)
+    prod = db.Product.get(db.Product.id == save.get("prod_id"))
+    for ord in db.Order.select().where(db.Order.product==prod):
+        ord.delete_instance()
+    cat = prod.category.id
+    name = prod.title
+    prod.delete_instance()
+    key = telebot.types.InlineKeyboardMarkup()
+    key.add(telebot.types.InlineKeyboardButton(text="К Категории", callback_data="category>" + str(cat)))
+    bot.send_message(call.message.chat.id,text=u"Товар "+name+u" успешно удален",reply_markup=key)
 
 bot.polling()

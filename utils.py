@@ -199,7 +199,7 @@ class Util:
         user, cre = self.db.get_user(message.chat)
         save = self.db.get_user_date(user)
         if user.is_admin:
-            cat = self.db.Category.get(self.db.Category.id == int(save["category"]))
+            cat = self.db.Category.get(self.db.Category.id == int(save.get("cat_id")))
             oldname = cat.name
             cat.name = message.text
             cat.save()

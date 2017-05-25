@@ -116,14 +116,14 @@ def category(call):
 def view_prod(call):
     user, cre = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    ut.send_product(call.message.chat, save.prod_id)
+    ut.send_product(call.message.chat, save.get("prod_id"))
 
 
 @bot.callback_query_handler(func=lambda call: ut.routes("buy>prod_id:int", call))
 def buy_prod(call):
     user, c = db.get_user_date(call.message.chat)
     save = db.get_user_date(user)
-    prod = db.Product.get(db.Product.id == save.prod_id)
+    prod = db.Product.get(db.Product.id == save.get("prod_id"))
     order, c = db.Order.get_or_create(user=user, product=prod)
     if order.count is None:
         order.count = 1
@@ -159,7 +159,7 @@ def del_view_category(call):
 def del_category(call):
     user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    cat = db.Category.get(db.Category.id == int(save.cat_id))
+    cat = db.Category.get(db.Category.id == int(save.get("cat_id")))
     name = cat.name
     for prod in db.Product.select().where(db.Product.category == cat):
         prod.delete_instance()
@@ -204,7 +204,7 @@ def edit_prod_count(call):
 def edit_prod_category(call):
     user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    key = cat_list("edit>prod>setcat>", prod=save.prod_id)
+    key = cat_list("edit>prod>setcat>", prod=save.get("prod_id"))
     bot.send_message(call.message.chat.id, "Выбирите категорию", reply_markup=key)
 
 
@@ -212,8 +212,8 @@ def edit_prod_category(call):
 def edit_prod_set_category(call):
     user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    prod = db.Product.get(db.Product.id == save.prod_id)
-    cat = db.Category.get(db.Category.id == save.cat_id)
+    prod = db.Product.get(db.Product.id == save.get("prod_id"))
+    cat = db.Category.get(db.Category.id == save.get("cat_id"))
     prod.category = cat
     prod.save()
     ut.send_product(call.message.chat, prod.id)
@@ -223,7 +223,7 @@ def edit_prod_set_category(call):
 def rename_category(call):
     user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
-    cat = db.Category.get(db.Category.id == save.cat_id)
+    cat = db.Category.get(db.Category.id == save.get("cat_id"))
     msg = bot.send_message(call.message.chat.id, u"Пришлите новое имя категории " + cat.name)
     bot.register_next_step_handler(msg, ut.edit_cat_name)
 

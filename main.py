@@ -4,11 +4,9 @@ import telebot
 import db
 import utils
 
-
 from flask import Flask, request, abort, jsonify
 
-
-bot = telebot.TeleBot(os.environ['API_TIKEN'],threaded=False)
+bot = telebot.TeleBot(os.environ['API_TIKEN'], threaded=False)
 
 server = Flask(__name__)
 
@@ -234,19 +232,20 @@ def rename_category(call):
     msg = bot.send_message(call.message.chat.id, u"Пришлите новое имя категории " + cat.name)
     bot.register_next_step_handler(msg, ut.edit_cat_name)
 
+
 @bot.callback_query_handler(func=lambda call: ut.routes("del>product>prod_id:int", call))
 def del_prod_sclad(call):
     user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
     prod = db.Product.get(db.Product.id == save.get("prod_id"))
-    for ord in db.Order.select().where(db.Order.product==prod):
+    for ord in db.Order.select().where(db.Order.product == prod):
         ord.delete_instance()
     cat = prod.category.id
     name = prod.title
     prod.delete_instance()
     key = telebot.types.InlineKeyboardMarkup()
     key.add(telebot.types.InlineKeyboardButton(text="К Категории", callback_data="category>" + str(cat)))
-    bot.send_message(call.message.chat.id,text=u"Товар "+name+u" успешно удален",reply_markup=key)
+    bot.send_message(call.message.chat.id, text=u"Товар " + name + u" успешно удален", reply_markup=key)
 
 
 @server.route("/bot", methods=['POST'])
@@ -254,16 +253,17 @@ def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
 
-@server.route("/up",methods=["POST"])
+
+@server.route("/up", methods=["POST"])
 def login():
     if not request.json:
         abort(400)
     else:
         if request.json.get("api") == os.environ.get("API_TIKEN"):
             db.up_user(request.json.get("id"))
-            return "!",200
+            return "!", 200
         else:
-            return jsonify(request.json),200
+            return jsonify(request.json), 200
 
 
 @server.route("/")
@@ -272,7 +272,7 @@ def webhook():
 
     bot.set_webhook(url=os.environ['SITE_URL'])
 
-    return  "!",200
+    return "!", 200
 
 
-server.run(host="0.0.0.0",port=os.environ.get("PORT",5000))
+server.run(host="0.0.0.0", port=os.environ.get("PORT", 5000))

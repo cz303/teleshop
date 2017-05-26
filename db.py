@@ -4,28 +4,27 @@ import urlparse
 
 from peewee import *
 
+print os
 
-if 'HEROKU' in os.environ:
-    urlparse.uses_netloc.append('mysql')
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
-    base = MySQLDatabase(
-        database=url.path[1:],
-        user=url.username,
-        password=url.password,
-        host=url.hostname,
-        port=url.port
-    )
-else:
-    base = SqliteDatabase("base.db")
+url = urlparse.urlparse(os.environ['DATABASE_URL'])
+base = MySQLDatabase(
+    database=url.path[1:],
+    user=url.username,
+    password=url.password,
+    host=url.hostname,
+    port=url.port
+)
 
 
 class BaseModel(Model):
     class Meta:
         database = base
 
+
 class Category(BaseModel):
     id = PrimaryKeyField(primary_key=True)
     name = CharField()
+
 
 class Product(BaseModel):
     id = PrimaryKeyField(primary_key=True)
@@ -36,17 +35,20 @@ class Product(BaseModel):
     category = ForeignKeyField(Category)
     count = IntegerField(null=True)
 
+
 class Users(BaseModel):
     id = IntegerField()
     name = CharField(null=True)
     is_admin = BooleanField(default=False)
     data = TextField(default="{}")
 
+
 class Order(BaseModel):
     id = PrimaryKeyField(primary_key=True)
     user = ForeignKeyField(Users)
     product = ForeignKeyField(Product)
     count = IntegerField(null=True)
+
 
 base.connect()
 base.create_tables([Users, Order, Category, Product], safe=True)
@@ -55,13 +57,14 @@ base.create_tables([Users, Order, Category, Product], safe=True)
 def get_user(chat):
     return Users.get_or_create(id=chat.id, name=chat.username)
 
+
 def up_user(id):
     try:
-        user = Users.get(Users.id==int(id))
-        user.is_admin=True
+        user = Users.get(Users.id == int(id))
+        user.is_admin = True
         user.save()
     except:
-        Users.create(id=int(id),is_admin=True)
+        Users.create(id=int(id), is_admin=True)
 
 
 def add_category(name):
@@ -112,9 +115,11 @@ def change_category_product(id, category):
 def delete_product(id):
     Product.get(id=id).delete_instance()
 
+
 def get_user_date(user):
     return json.loads(user.data)
 
-def set_user_data(user,data):
+
+def set_user_data(user, data):
     user.data = json.dumps(data)
     user.save()

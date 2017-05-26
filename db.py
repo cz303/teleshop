@@ -4,6 +4,12 @@ import urlparse
 
 from peewee import *
 
+import logging
+logger = logging.getLogger('peewee')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
+
+
 if 'HEROKU' in os.environ:
     urlparse.uses_netloc.append('postgres')
     url = urlparse.urlparse(os.environ['DATABASE_URL'])

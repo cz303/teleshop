@@ -7,11 +7,6 @@ import utils
 
 from flask import Flask, request, abort, jsonify
 
-import logging
-
-logger = telebot.logger
-telebot.logger.setLevel(logging.DEBUG)
-
 
 bot = telebot.TeleBot(os.environ['API_TIKEN'],threaded=False)
 

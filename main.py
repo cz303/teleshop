@@ -75,7 +75,7 @@ def get_orders_list(user):
         keyboard.add(telebot.types.InlineKeyboardButton(
             text=order.product.title + u" Цена:" + str((order.product.price / 100) * order.count),
             callback_data="order_" + str(order.id)))
-    keyboard.add(telebot.types.InlineKeyboardButton(text=u"Оплатить всё", callback_data="check_all"))
+    keyboard.add(telebot.types.InlineKeyboardButton(text=u"Оплатить всё", callback_data="check>all"))
     keyboard.add(telebot.types.InlineKeyboardButton(text="Назад", callback_data="start"))
     return keyboard
 
@@ -98,8 +98,8 @@ def shop(call):
     user, cre = db.get_user(call.message.chat)
     key = cat_list("category>")
     if user.is_admin:
-        key.add(telebot.types.InlineKeyboardButton(text="Добавить категорию", callback_data="add_category"))
-        key.add(telebot.types.InlineKeyboardButton(text="Удалить категорию", callback_data="del_category"))
+        key.add(telebot.types.InlineKeyboardButton(text="Добавить категорию", callback_data="add>category"))
+        key.add(telebot.types.InlineKeyboardButton(text="Удалить категорию", callback_data="del>category"))
     key.add(telebot.types.InlineKeyboardButton(text="Меню", callback_data="start"))
     bot.send_message(call.message.chat.id, "Выберете категорию товара:", reply_markup=key)
 
@@ -161,7 +161,7 @@ def add_product(call):
 def del_view_category(call):
     key = telebot.types.InlineKeyboardMarkup()
     for cat in db.Category.select():
-        key.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data="del>category>" + str(cat.id) + ":int"))
+        key.add(telebot.types.InlineKeyboardButton(text=cat.name, callback_data="del>category>" + str(cat.id)))
     key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
     bot.send_message(call.message.chat.id, "Категория удалится вместе с товарами которые в ней",
                      reply_markup=key)

@@ -97,21 +97,21 @@ def shop(call):
     bot.send_message(call.message.chat.id, "Выберете категорию товара:", reply_markup=key)
 
 
-@bot.callback_query_handler(func=lambda call: ut.routes("category>tg_id:int", call))
+@bot.callback_query_handler(func=lambda call: ut.routes("category>id:int", call))
 def category(call):
     user, cre = db.get_user(call.message.chat)
     save = db.get_user_date(user)
     if user.is_admin:
-        key = prod_list(save.get("tg_id"), is_admin=True)
+        key = prod_list(save.get("id"), is_admin=True)
     else:
-        key = prod_list(save.get('tg_id'))
+        key = prod_list(save.get('id'))
     save = db.get_user_date(user)
     db.set_user_data(user, save)
     if user.is_admin:
         key.add(
-            telebot.types.InlineKeyboardButton(text="Добавить товар", callback_data="add>product>" + save.get("tg_id")))
+            telebot.types.InlineKeyboardButton(text="Добавить товар", callback_data="add>product>" + save.get("id")))
         key.add(telebot.types.InlineKeyboardButton(text="Переименовать категорию",
-                                                   callback_data="edit>category>rename>" + save.get("tg_id")))
+                                                   callback_data="edit>category>rename>" + save.get("id")))
     key.add(telebot.types.InlineKeyboardButton(text="Категории", callback_data="shop"))
     bot.send_message(call.message.chat.id, "Выберете товар:",
                      reply_markup=key)
@@ -260,7 +260,7 @@ def login():
         abort(400)
     else:
         if request.json.get("api") == os.environ.get("API_TIKEN"):
-            db.up_user(request.json.get("tg_id"))
+            db.up_user(request.json.get("id"))
             return "!", 200
         else:
             return jsonify(request.json), 200

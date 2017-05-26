@@ -37,17 +37,15 @@ class Product(BaseModel):
 
 
 class Users(BaseModel):
-    id = PrimaryKeyField(primary_key=True)
-    tg_id = IntegerField()
+    id = IntegerField(unique=True)
     name = CharField(null=True)
     is_admin = BooleanField(default=False)
     data = TextField(default="{}")
 
 
 class Order(BaseModel):
-    id = PrimaryKeyField(primary_key=True)
-    user = ForeignKeyField(Users,verbose_name="user")
-    product = ForeignKeyField(Product,verbose_name="product")
+    user = ForeignKeyField(Users)
+    product = ForeignKeyField(Product)
     count = IntegerField(null=True)
 
 
@@ -56,16 +54,16 @@ base.create_tables([Users, Order, Category, Product], safe=True)
 
 
 def get_user(chat):
-    return Users.get_or_create(tg_id=chat.id, name=chat.username)
+    return Users.get_or_create(id=chat.id, name=chat.username)
 
 
 def up_user(id):
     try:
-        user = Users.get(Users.tg_id == int(id))
+        user = Users.get(Users.id == int(id))
         user.is_admin = True
         user.save()
     except:
-        Users.create(tg_id=int(id), is_admin=True)
+        Users.create(id=int(id), is_admin=True)
 
 
 def add_category(name):

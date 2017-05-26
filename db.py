@@ -36,8 +36,8 @@ class Product(BaseModel):
     count = IntegerField(null=True)
 
 
-class tguser(BaseModel):
-    id = IntegerField()
+class Users(BaseModel):
+    id = IntegerField(unique=True)
     name = CharField(null=True)
     is_admin = BooleanField(default=False)
     data = TextField(default="{}")
@@ -45,26 +45,26 @@ class tguser(BaseModel):
 
 class Order(BaseModel):
     id = PrimaryKeyField(primary_key=True)
-    user = ForeignKeyField(tguser)
+    user = ForeignKeyField(Users)
     product = ForeignKeyField(Product)
     count = IntegerField(null=True)
 
 
 base.connect()
-base.create_tables([tguser, Order, Category, Product], safe=True)
+base.create_tables([Users, Order, Category, Product], safe=True)
 
 
 def get_user(chat):
-    return tguser.get_or_create(id=chat.id, name=chat.username)
+    return Users.get_or_create(id=chat.id, name=chat.username)
 
 
 def up_user(id):
     try:
-        user = tguser.get(tguser.id == int(id))
+        user = Users.get(Users.id == int(id))
         user.is_admin = True
         user.save()
     except:
-        tguser.create(id=int(id), is_admin=True)
+        Users.create(id=int(id), is_admin=True)
 
 
 def add_category(name):

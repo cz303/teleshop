@@ -2,7 +2,6 @@
 import os
 
 import telebot
-import config
 import db
 import utils
 
@@ -12,7 +11,7 @@ from flask import Flask,request
 
 
 
-bot = telebot.TeleBot(config.API_TOKEN)
+bot = telebot.TeleBot(os.environ['DATABASE_URL'])
 
 server = Flask(__name__)
 
@@ -63,9 +62,9 @@ def prod_list(category, is_admin=False):
 
 def get_price(product):
     if product.price is not None:
-        return config.currency + "{0:.2f}".format(product.price / 100)
+        return os.environ['currency'] + "{0:.2f}".format(product.price / 100)
     else:
-        return config.currency + u"0"
+        return os.environ['currency'] + u"0"
 
 
 def get_orders_list(user):
@@ -261,7 +260,7 @@ def getMessaage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url=config.url)
+    bot.set_webhook(url=os.environ['SITE_URL'])
     return "!",200
 
 server.run(host="0.0.0.0",port=os.environ.get("PORT",5000))

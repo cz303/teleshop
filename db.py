@@ -1,25 +1,30 @@
 import json
+import os
+import urlparse
 
 from peewee import *
 
-import config
-
-#base = SqliteDatabase("base.db")
-
-base = PostgresqlDatabase(
-    "shop",
-    user="hxneckwf",
-    password="0OclLgZRKdxj5NMfzQLKoNavKyruwT_2",
-    host="qdjjtnkv.db.elephantsql.com",
-)
-
-DeferredCategory = DeferredRelation()
+if 'HEROKU' in os.environ:
+    urlparse.uses_netloc.append('postgres')
+    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    base = PostgresqlDatabase(
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
+else:
+    base = SqliteDatabase("base.db")
 
 
 class BaseModel(Model):
     class Meta:
         database = base
 
+class Category(BaseModel):
+    id = PrimaryKeyField(primary_key=True)
+    name = CharField()
 
 class Product(BaseModel):
     id = PrimaryKeyField(primary_key=True)
@@ -27,14 +32,8 @@ class Product(BaseModel):
     description = TextField(null=True)
     img = TextField()
     price = IntegerField(null=True)
-    category = ForeignKeyField(DeferredCategory)
+    category = ForeignKeyField(Category)
     count = IntegerField(null=True)
-
-
-class Category(BaseModel):
-    id = PrimaryKeyField(primary_key=True)
-    name = CharField()
-
 
 class Users(BaseModel):
     id = IntegerField()
@@ -47,8 +46,6 @@ class Order(BaseModel):
     user = ForeignKeyField(Users)
     product = ForeignKeyField(Product)
     count = IntegerField(null=True)
-
-DeferredCategory.set_model(Category)
 
 base.connect()
 base.create_tables([Users, Order, Category, Product], safe=True)

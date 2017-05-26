@@ -1,9 +1,8 @@
 # coding=utf-8
+import os
 import types
 
 import telebot
-
-import config
 
 
 class Util:
@@ -117,9 +116,9 @@ class Util:
 
     def get_price(self, product):
         if product.price is not None:
-            return config.currency + "{0:.2f}".format(product.price / 100)
+            return os.environ['currency'] + "{0:.2f}".format(product.price / 100)
         else:
-            return config.currency + u"0"
+            return os.environ['currency'] + u"0"
 
     def edit_prod_img(self, message):
         user, cre = self.db.get_user(message.chat)

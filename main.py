@@ -5,10 +5,7 @@ import db
 import utils
 
 
-from flask import Flask,request,abort
-
-
-
+from flask import Flask, request, abort, jsonify
 
 bot = telebot.TeleBot(os.environ['API_TIKEN'])
 
@@ -265,6 +262,8 @@ def login():
         user.is_admin =True
         user.save()
         return "!",200
+    else:
+        return jsonify(request.json),200
 
 
 @server.route("/")

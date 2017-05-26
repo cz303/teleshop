@@ -46,8 +46,8 @@ class Users(BaseModel):
 
 class Order(BaseModel):
     id = PrimaryKeyField(primary_key=True)
-    user = ForeignKeyField(Users)
-    product = ForeignKeyField(Product)
+    user = ForeignKeyField(Users,verbose_name="user")
+    product = ForeignKeyField(Product,verbose_name="product")
     count = IntegerField(null=True)
 
 

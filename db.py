@@ -4,16 +4,11 @@ import urlparse
 
 from peewee import *
 
-import logging
-logger = logging.getLogger('peewee')
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
-
 
 if 'HEROKU' in os.environ:
-    urlparse.uses_netloc.append('postgres')
+    urlparse.uses_netloc.append('mysql')
     url = urlparse.urlparse(os.environ['DATABASE_URL'])
-    base = PostgresqlDatabase(
+    base = MySQLDatabase(
         database=url.path[1:],
         user=url.username,
         password=url.password,

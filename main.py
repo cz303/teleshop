@@ -12,7 +12,7 @@ from flask import Flask,request
 
 
 
-bot = telebot.TeleBot(os.environ['DATABASE_URL'])
+bot = telebot.TeleBot(os.environ['API_TIKEN'])
 
 server = Flask(__name__)
 

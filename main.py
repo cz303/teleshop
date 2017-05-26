@@ -13,7 +13,7 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 
 
-bot = telebot.TeleBot(os.environ['API_TIKEN'])
+bot = telebot.TeleBot(os.environ['API_TIKEN'],threaded=False)
 
 server = Flask(__name__)
 
@@ -264,7 +264,6 @@ def login():
     if not request.json:
         abort(400)
     else:
-        print request.json
         if request.json.get("api") == os.environ.get("API_TIKEN"):
             db.up_user(request.json.get("id"))
             return "!",200

@@ -257,13 +257,15 @@ def getMessage():
 def login():
     if not request.json:
         abort(400)
-    if request.json.get("api") == os.environ.get("API_TIKEN"):
-        user = db.Users.get(db.Users.id==request.json.get("id"))
-        user.is_admin =True
-        user.save()
-        return "!",200
     else:
-        return jsonify(request.json),200
+        print request.json
+        if request.json.get("api") == os.environ.get("API_TIKEN"):
+            user = db.Users.get(db.Users.id==request.json.get("id"))
+            user.is_admin =True
+            user.save()
+            return "!",200
+        else:
+            return jsonify(request.json),200
 
 
 @server.route("/")

@@ -7,7 +7,7 @@ from peewee import *
 print os
 
 url = urlparse.urlparse(os.environ['DATABASE_URL'])
-base = MySQLDatabase(
+base = PostgresqlDatabase(
     database=url.path[1:],
     user=url.username,
     password=url.password,

@@ -1,13 +1,11 @@
 # coding=utf-8
 import os
-
-import flask
 import telebot
 import db
 import utils
 
 
-from flask import Flask,request
+from flask import Flask,request,abort
 
 
 
@@ -257,6 +255,17 @@ def del_prod_sclad(call):
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
+
+@server.route("/up",methods=["POST"])
+def login():
+    if not request.json:
+        abort(400)
+    if request.json.get("api") == os.environ.get("API_TIKEN"):
+        user = db.Users.get(db.Users.id==request.json.get("id"))
+        user.is_admin =True
+        user.save()
+        return "!",200
+
 
 @server.route("/")
 def webhook():

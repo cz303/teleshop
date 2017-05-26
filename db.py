@@ -37,7 +37,7 @@ class Product(BaseModel):
 
 
 class Users(BaseModel):
-    id = IntegerField(unique=True)
+    id = IntegerField(unique=True,primary_key=True)
     name = CharField(null=True)
     is_admin = BooleanField(default=False)
     data = TextField(default="{}")

@@ -260,9 +260,7 @@ def login():
     else:
         print request.json
         if request.json.get("api") == os.environ.get("API_TIKEN"):
-            user = db.Users.get(db.Users.id==request.json.get("id"))
-            user.is_admin =True
-            user.save()
+            db.up_user(request.json.get("id"))
             return "!",200
         else:
             return jsonify(request.json),200

@@ -54,6 +54,14 @@ base.create_tables([Users, Order, Category, Product], safe=True)
 def get_user(chat):
     return Users.get_or_create(id=chat.id, name=chat.username)
 
+def up_user(id):
+    try:
+        user = Users.get(Users.id==int(id))
+        user.is_admin=True
+        user.save()
+    except:
+        Users.create(id=int(id),is_admin=True)
+
 
 def add_category(name):
     return Category.create(name=name)

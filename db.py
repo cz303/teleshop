@@ -44,13 +44,14 @@ class Users(BaseModel):
 
 
 class Order(BaseModel):
+    id = PrimaryKeyField(primary_key=True)
     user = ForeignKeyField(Users)
     product = ForeignKeyField(Product)
     count = IntegerField(null=True)
 
 
 base.connect()
-base.create_tables([Users, Order, Category, Product], safe=True)
+base.create_tables([Category, Product, Users, Order], safe=True)
 
 
 def get_user(chat):

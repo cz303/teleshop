@@ -1,6 +1,7 @@
 # coding=utf-8
 import os
 
+import flask
 import telebot
 import db
 import utils
@@ -252,15 +253,23 @@ def del_prod_sclad(call):
     bot.send_message(call.message.chat.id,text=u"Товар "+name+u" успешно удален",reply_markup=key)
 
 
-@server.route("/bot",methods=['POST'])
-def getMessaage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!",200
+@server.route("/bot",methods=["POST"])
+def getMessage():
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().encode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_messages([update.message])
+        return ''
+    else:
+        flask.abort(403)
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
+
     bot.set_webhook(url=os.environ['SITE_URL'])
-    return "!",200
+
+    return  "!",200
+
 
 server.run(host="0.0.0.0",port=os.environ.get("PORT",5000))

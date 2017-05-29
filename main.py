@@ -77,6 +77,7 @@ def get_orders_list(user):
 
 @bot.message_handler(commands=["login"])
 def login(message):
+    print message
     user,c = db.get_user(message.chat)
     if c:
         print "CREATE USER"

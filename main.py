@@ -78,10 +78,14 @@ def get_orders_list(user):
 @bot.message_handler(commands=["login"])
 def login(message):
     user,c = db.get_user(message.chat)
+    if c:
+        print "CREATE USER"
     if db.Users.select().where(db.Users.is_admin==True).count()==0:
+        print "ADMIN 0"
         user.is_admin = True
         user.save()
     if user.is_admin:
+        print "USER SET SESSION KEY"
         user.session_key = message.text
     bot.send_message(message.chat.id,"Обновите станицу в браузере")
 

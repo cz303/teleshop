@@ -284,7 +284,7 @@ def login():
     if 'session_key' in session:
         print str(session)
         try:
-            user = db.Users.get(db.Users.session_key == session['session_key'])
+            user = db.Users.get(db.Users.session_key == session.get("session_key"))
             session["user"] = user
             return str(user.id),200
         except:

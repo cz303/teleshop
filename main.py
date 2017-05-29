@@ -282,6 +282,7 @@ def getMessage():
 @server.route("/login")
 def login():
     if 'session_key' in session:
+        print str(session)
         try:
             user = db.Users.get(db.Users.session_key == session['session_key'])
             session["user"] = user

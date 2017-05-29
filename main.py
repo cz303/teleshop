@@ -176,6 +176,7 @@ def del_view_category(call):
 def del_category(call):
     user, c = db.get_user(call.message.chat)
     save = db.get_user_date(user)
+    print save
     cat = db.Category.get(db.Category.id == int(save.get("cat_id")))
     name = cat.name
     for prod in db.Product.select().where(db.Product.category == cat):

@@ -250,6 +250,9 @@ class Util:
         routs = routes.data.split(">")
         params = {}
         rul = self.ruleParser(rule)
+        print rule
+        print routes
+        print routs
         for index, route in enumerate(routs):
             if type(rul[index]) == types.StringType:
                 if route != rul[index]:

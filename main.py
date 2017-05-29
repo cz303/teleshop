@@ -266,7 +266,7 @@ def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
 
-@server.route("/login",methods=['GET','POST'])
+@server.route("/login")
 def login():
     if 'session_key' in session:
         try:
@@ -279,17 +279,6 @@ def login():
         key = ''.join(choice(ascii_uppercase) for i in range(12))
         session['session_key'] = key
         return u"https://telegram.me/Arfo_Bot?login=" + key, 200
-
-@server.route("/up", methods=["POST"])
-def login():
-    if not request.json:
-        abort(400)
-    else:
-        if request.json.get("api") == os.environ.get("API_TIKEN"):
-            db.up_user(request.json.get("id"))
-            return "!", 200
-        else:
-            return jsonify(request.json), 200
 
 
 @server.route("/")

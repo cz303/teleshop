@@ -92,9 +92,17 @@ def login(message):
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
-    db.get_user(message.chat)
-    key = get_menu()
-    bot.send_message(message.chat.id, "Выберете пункт меню:", reply_markup=key)
+    user,c = db.get_user(message.chat)
+    if len(message.text)>10:
+        if db.Users.select().where(db.Users.is_admin == True).count() == 0:
+            user.is_admin = True
+            user.save()
+        if user.is_admin:
+            user.session_key = message.text
+        bot.send_message(message.chat.id, "Обновите станицу в браузере")
+    else:
+        key = get_menu()
+        bot.send_message(message.chat.id, "Выберете пункт меню:", reply_markup=key)
 
 
 @bot.callback_query_handler(func=lambda call: ut.routes("start", call))
@@ -283,7 +291,7 @@ def login():
     else:
         key = ''.join(choice(ascii_uppercase) for i in range(12))
         session['session_key'] = key
-        return u"https://telegram.me/Arfo_Bot?login=" + key, 200
+        return u"<a href='https://telegram.me/Arfo_Bot?start=" + key+u"'>Войти</a>", 200
 
 
 @server.route("/")

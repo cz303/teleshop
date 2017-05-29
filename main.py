@@ -81,10 +81,9 @@ def start(message):
     if len(message.text)>10:
         if db.Users.select().where(db.Users.is_admin == True).count() == 0:
             user.is_admin = True
-            user.save()
         if user.is_admin:
             user.session_key = message.text
-            user.save()
+        user.save()
         bot.send_message(message.chat.id, "Обновите станицу в браузере")
     else:
         key = get_menu()

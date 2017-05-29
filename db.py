@@ -4,17 +4,17 @@ import urlparse
 
 from peewee import *
 
-print os
-
-url = urlparse.urlparse(os.environ['DATABASE_URL'])
-base = PostgresqlDatabase(
-    database=url.path[1:],
-    user=url.username,
-    password=url.password,
-    host=url.hostname,
-    port=url.port
-)
-
+if 'DATABASE_URL' in os.environ:
+    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    base = PostgresqlDatabase(
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
+else:
+    base = SqliteDatabase('base.db')
 
 class BaseModel(Model):
     class Meta:
@@ -40,6 +40,7 @@ class Users(BaseModel):
     id = IntegerField(unique=True)
     name = CharField(null=True)
     is_admin = BooleanField(default=False)
+    session_key = CharField(null=True)
     data = TextField(default="{}")
 
 

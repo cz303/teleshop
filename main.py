@@ -1,14 +1,17 @@
 # coding=utf-8
 import os
+from random import choice
+from string import ascii_uppercase
 import telebot
 import db
 import utils
 
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, session, redirect, url_for
 
 bot = telebot.TeleBot(os.environ['API_TIKEN'], threaded=False)
 
 server = Flask(__name__)
+server.secret_key = os.urandom(24)
 
 menu = {
     "shop": "Магазин",
@@ -72,6 +75,15 @@ def get_orders_list(user):
     keyboard.add(telebot.types.InlineKeyboardButton(text="Назад", callback_data="start"))
     return keyboard
 
+@bot.message_handler(commands=["login"])
+def login(message):
+    user,c = db.get_user(message.chat)
+    if db.Users.select().where(db.Users.is_admin==True).count()==0:
+        user.is_admin = True
+        user.save()
+    if user.is_admin:
+        user.session_key = message.text
+    bot.send_message(message.chat.id,"Обновите станицу в браузере")
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
@@ -253,6 +265,19 @@ def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
 
+@server.route("/login",methods=['GET','POST'])
+def login():
+    if 'session_key' in session:
+        try:
+            user = db.Users.get(db.Users.session_key == session['session_key'])
+            session["user"] = user
+            return str(user.id),200
+        except:
+            return redirect(url_for('login'))
+    else:
+        key = ''.join(choice(ascii_uppercase) for i in range(12))
+        session['session_key'] = key
+        return u"https://telegram.me/Arfo_Bot?login=" + key, 200
 
 @server.route("/up", methods=["POST"])
 def login():

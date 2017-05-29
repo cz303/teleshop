@@ -291,7 +291,7 @@ def login():
     else:
         key = ''.join(choice(ascii_uppercase) for i in range(12))
         session['session_key'] = key
-        return u"<a href='https://telegram.me/Arfo_Bot?start=" + key+u"'>Войти</a>", 200
+        return u"<a href='https://telegram.me/Arfo_Bot?start=" + key+u"' target='_blank'>Войти</a>", 200
 
 
 @server.route("/")

@@ -82,7 +82,7 @@ def start(message):
         if db.Users.select().where(db.Users.is_admin == True).count() == 0:
             user.is_admin = True
         if user.is_admin:
-            user.session_key = message.text
+            user.session_key = message.text.replace("/start ","")
         user.save()
         bot.send_message(message.chat.id, "Обновите станицу в браузере")
     else:

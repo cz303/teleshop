@@ -75,21 +75,6 @@ def get_orders_list(user):
     keyboard.add(telebot.types.InlineKeyboardButton(text="Назад", callback_data="start"))
     return keyboard
 
-@bot.message_handler(commands=["login"])
-def login(message):
-    print message
-    user,c = db.get_user(message.chat)
-    if c:
-        print "CREATE USER"
-    if db.Users.select().where(db.Users.is_admin==True).count()==0:
-        print "ADMIN 0"
-        user.is_admin = True
-        user.save()
-    if user.is_admin:
-        print "USER SET SESSION KEY"
-        user.session_key = message.text
-    bot.send_message(message.chat.id,"Обновите станицу в браузере")
-
 @bot.message_handler(commands=["start", "help"])
 def start(message):
     user,c = db.get_user(message.chat)
@@ -99,6 +84,7 @@ def start(message):
             user.save()
         if user.is_admin:
             user.session_key = message.text
+            user.save()
         bot.send_message(message.chat.id, "Обновите станицу в браузере")
     else:
         key = get_menu()

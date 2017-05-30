@@ -6,7 +6,7 @@ import telebot
 import db
 import utils
 
-from flask import Flask, request, abort, jsonify, session, redirect, url_for
+from flask import Flask, request, session, redirect, url_for,render_template
 
 bot = telebot.TeleBot(os.environ['API_TIKEN'], threaded=False)
 
@@ -270,14 +270,15 @@ def login():
         try:
             user = db.Users.get(db.Users.session_key == session.get("session_key"))
             session["user_id"] = user.id
-            return str(user.id), 200
+            return render_template('index.html',user_id = user.id)
         except:
             session.clear()
             redirect(url_for('login'))
     else:
         key = ''.join(choice(ascii_uppercase) for i in range(12))
         session['session_key'] = key
-        return u"<a href='https://telegram.me/Arfo_Bot?start=" + key+u"' target='_blank'>Войти</a>", 200
+        user_bot = bot.get_me()
+        return render_template('login.html',loginlink="https://telegram.me/"+user_bot.username+"?start="+key)
 
 
 @server.route("/")

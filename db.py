@@ -14,7 +14,14 @@ if 'DATABASE_URL' in os.environ:
         port=url.port
     )
 else:
-    base = SqliteDatabase('base.db')
+    url = urlparse.urlparse(os.environ['DATABASE'])
+    base = PostgresqlDatabase(
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
 
 class BaseModel(Model):
     class Meta:

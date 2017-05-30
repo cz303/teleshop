@@ -264,7 +264,7 @@ def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "!", 200
 
-@server.route("/login")
+@server.route("/")
 def login():
     if 'session_key' in session:
         try:
@@ -281,7 +281,7 @@ def login():
         return render_template('login.html',loginlink="https://telegram.me/"+user_bot.username+"?start="+key)
 
 
-@server.route("/")
+@server.route("/webhook")
 def webhook():
     bot.remove_webhook()
 

@@ -1,11 +1,11 @@
 class Users extends React.Component {
     render() {
-        return <<UserTable data=/>
+        return <UserTable data=/>
     }
 }
 
 class Category extends React.Component {
-    render() {
+    render(){
         return <h2>Категории</h2>
     }
 }

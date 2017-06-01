@@ -265,7 +265,7 @@ def getMessage():
     return "!", 200
 
 @server.route("/")
-def login():
+def adm():
     if 'session_key' in session:
         try:
             user = db.Users.get(db.Users.session_key == session.get("session_key"))
@@ -280,6 +280,8 @@ def login():
         user_bot = bot.get_me()
         return render_template('login.html',loginlink="https://telegram.me/"+user_bot.username+"?start="+key)
 
+@server.route('/login')
+def login()
 
 @server.route("/webhook")
 def webhook():

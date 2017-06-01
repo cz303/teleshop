@@ -1,11 +1,18 @@
-{% extends "base.html" %}
-
-{% block title %}Авторизация{% endblock %}
-
-{% block content %}
-    <div class="row">
-    <div class="col-sm-4 center-block">
-        <a href="{{ loginlink }}" class="btn btn-default" target="_blank">Авторизоватся</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/components/icon.css">
+    <title>Title</title>
+</head>
+<body>
+<div class="ui attached stackable menu">
+    <div class="ui container">
+        <div class="item">Админка</div>
+        <a href="{{ link }}" class="item right" target="_blank"><i class="send icon"></i>Авторизоватся</a>
     </div>
-    </div>
-{% endblock %}
+</div>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+</body>
+</html>

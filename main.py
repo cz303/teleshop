@@ -281,7 +281,8 @@ def adm():
         return render_template('login.html',loginlink="https://telegram.me/"+user_bot.username+"?start="+key)
 
 @server.route('/login')
-def login()
+def login():
+    pass
 
 @server.route("/webhook")
 def webhook():
